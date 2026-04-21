@@ -1,0 +1,163 @@
+[gd_scene format=3 uid="uid://vs_main_0001"]
+
+[ext_resource type="Script" uid="uid://vs_levelui01" path="res://scripts/level_ui.gd"    id="1_levelui"]
+[ext_resource type="Script" uid="uid://vs_player01" path="res://scripts/player.gd"      id="2_player"]
+[ext_resource type="Script" uid="uid://vs_guard001" path="res://scripts/guard.gd"       id="3_guard"]
+[ext_resource type="Script" uid="uid://vs_data0001" path="res://scripts/data_node.gd"   id="4_data"]
+[ext_resource type="Script" uid="uid://vs_exit0001" path="res://scripts/exit_portal.gd" id="5_exit"]
+[ext_resource type="Script" uid="uid://vs_lvlmap01" path="res://scripts/level_map.gd"   id="6_map"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_1"]
+size = Vector2(1280, 32)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_2"]
+size = Vector2(1280, 32)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_3"]
+size = Vector2(32, 720)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_4"]
+size = Vector2(32, 720)
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_player"]
+radius = 9.0
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_data"]
+radius = 14.0
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_exit"]
+size = Vector2(44, 44)
+
+; ── Root ──────────────────────────────────────────────────────────────────
+[node name="Main" type="Node2D"]
+script = ExtResource("1_levelui")
+
+; TileMap renders floor + wall tiles from walls_floor.png (16×16 tiles)
+; Script: level_map.gd builds the TileSet and draws the room at runtime
+[node name="TileMap" type="TileMapLayer" parent="."]
+script = ExtResource("6_map")
+
+; Darken world — guards' PointLight2D provide the only brightness
+[node name="CanvasModulate" type="CanvasModulate" parent="."]
+color = Color(0.04, 0.04, 0.12, 1)
+
+; ── Physics walls (collision only — visuals handled by TileMap) ───────────
+[node name="Walls" type="Node2D" parent="."]
+
+[node name="Wall_Top" type="StaticBody2D" parent="Walls"]
+position = Vector2(640, 16)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Walls/Wall_Top"]
+shape = SubResource("RectangleShape2D_1")
+
+[node name="Wall_Bottom" type="StaticBody2D" parent="Walls"]
+position = Vector2(640, 704)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Walls/Wall_Bottom"]
+shape = SubResource("RectangleShape2D_2")
+
+[node name="Wall_Left" type="StaticBody2D" parent="Walls"]
+position = Vector2(16, 360)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Walls/Wall_Left"]
+shape = SubResource("RectangleShape2D_3")
+
+[node name="Wall_Right" type="StaticBody2D" parent="Walls"]
+position = Vector2(1264, 360)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Walls/Wall_Right"]
+shape = SubResource("RectangleShape2D_4")
+
+; ── Guards ────────────────────────────────────────────────────────────────
+; All children (cone visual, detection Area2D, PointLight2D) created by guard.gd
+[node name="Guards" type="Node2D" parent="."]
+
+; Guard1: center room, facing right (rotation = 0)
+[node name="Guard1" type="Node2D" parent="Guards"]
+position = Vector2(420, 310)
+script = ExtResource("3_guard")
+
+; Guard2: upper-right, facing lower-left (135° = 2.35619 rad)
+[node name="Guard2" type="Node2D" parent="Guards"]
+position = Vector2(820, 160)
+rotation = 2.35619
+script = ExtResource("3_guard")
+
+; Guard3: lower-center, facing up (-90° = -1.5708 rad)
+[node name="Guard3" type="Node2D" parent="Guards"]
+position = Vector2(660, 530)
+rotation = -1.5708
+script = ExtResource("3_guard")
+
+; ── Data Nodes ────────────────────────────────────────────────────────────
+; Collision shape + visual created by data_node.gd at runtime
+[node name="DataNodes" type="Node2D" parent="."]
+
+[node name="DataNode1" type="Area2D" parent="DataNodes"]
+position = Vector2(270, 165)
+script = ExtResource("4_data")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="DataNodes/DataNode1"]
+shape = SubResource("CircleShape2D_data")
+
+[node name="DataNode2" type="Area2D" parent="DataNodes"]
+position = Vector2(960, 430)
+script = ExtResource("4_data")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="DataNodes/DataNode2"]
+shape = SubResource("CircleShape2D_data")
+
+; ── Exit Portal ───────────────────────────────────────────────────────────
+[node name="ExitPortal" type="Area2D" parent="."]
+position = Vector2(1160, 610)
+script = ExtResource("5_exit")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="ExitPortal"]
+shape = SubResource("RectangleShape2D_exit")
+
+; ── Player ────────────────────────────────────────────────────────────────
+; AnimatedSprite2D + CollisionShape2D created by player.gd at runtime
+[node name="Player" type="CharacterBody2D" parent="."]
+position = Vector2(80, 80)
+script = ExtResource("2_player")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Player"]
+shape = SubResource("CircleShape2D_player")
+
+; ── HUD ───────────────────────────────────────────────────────────────────
+[node name="HUD" type="CanvasLayer" parent="."]
+layer = 10
+
+[node name="DeathCount" type="Label" parent="HUD"]
+offset_left = 20.0
+offset_top = 18.0
+offset_right = 260.0
+offset_bottom = 44.0
+text = "DEATHS: 0"
+theme_override_font_sizes/font_size = 18
+theme_override_colors/font_color = Color(0.75, 0.51, 0.99, 1)
+
+[node name="DataCount" type="Label" parent="HUD"]
+offset_left = 20.0
+offset_top = 46.0
+offset_right = 260.0
+offset_bottom = 72.0
+text = "DATA: 0 / 0"
+theme_override_font_sizes/font_size = 18
+theme_override_colors/font_color = Color(0.13, 0.83, 0.93, 1)
+
+[node name="Message" type="Label" parent="HUD"]
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -320.0
+offset_top = -36.0
+offset_right = 320.0
+offset_bottom = 36.0
+text = ""
+horizontal_alignment = 1
+vertical_alignment = 1
+theme_override_font_sizes/font_size = 22
+theme_override_colors/font_color = Color(0.13, 0.83, 0.93, 1)
+modulate = Color(0.13, 0.83, 0.93, 0)
